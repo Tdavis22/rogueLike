@@ -2,6 +2,7 @@ import libtcodpy as libtcod
 
 #Params: Con = console ref, entites = list of entity, game_map = map ref, colors = libtcod color Dictionary
 def render_all(con, entites, game_map, SCREEN_WIDTH, SCREEN_HEIGHT, colors):
+
     #Draw all entites in the list entites
     for y in range(game_map.height):
         for x in range(game_map.width):
@@ -24,6 +25,8 @@ def clear_all(con, entities):
 
 def draw_entity(con, entity):
     libtcod.console_set_default_foreground(con, entity.color)
+    #libtcod.console_put_char_ex(con, entity.x, entity.y, entity.char, libtcod.white, libtcod.BKGND_NONE)
+    #libtcod.console_put_char_ex(con, entity.x, entity.y, entity.char, libtcod.white, libtcod.black)
     libtcod.console_put_char(con, entity.x, entity.y, entity.char, libtcod.BKGND_NONE)
 
 def clear_entity(con, entity):
