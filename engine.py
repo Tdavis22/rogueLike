@@ -10,6 +10,10 @@ def main():
     SCREEN_HEIGHT = 50
     MAP_WIDTH = 80
     MAP_HEIGHT = 45
+
+    ROOM_MAX_SIZE = 10
+    ROOM_MIN_SIZE = 6
+    MAX_ROOMS = 30
     """
     if we were to implement custom tiles
     wall_tile = 256
@@ -24,7 +28,7 @@ def main():
     stairsdown_tile = 265
     dagger_tile = 266
     """
-
+    #BEGIN INITAILIZATION
     colors = {
         'dark_wall': libtcod.Color(0,0,100),
         'dark_ground': libtcod.Color(50, 50, 150)
@@ -33,7 +37,6 @@ def main():
     player = Entity(int(SCREEN_WIDTH / 2), int(SCREEN_HEIGHT /2 ),'@', libtcod.white)
     npc = Entity(int(SCREEN_WIDTH / 2 - 5), int(SCREEN_HEIGHT /2 ), '@', libtcod.yellow)
     entities = [npc, player]
-
 
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
     #The font has 32 chars in a row, and there's a total of 10 rows. Increase the "10" when you add new rows to the sample font file
@@ -44,10 +47,12 @@ def main():
     con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     game_map = GameMap(MAP_WIDTH, MAP_HEIGHT)
+    game_map.make_map(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, MAP_WIDTH, MAP_HEIGHT, player)
 
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
+    #END INTIALIZATION
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
 
