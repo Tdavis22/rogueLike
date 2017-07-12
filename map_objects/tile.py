@@ -8,6 +8,7 @@ class Tile:
 
     def __init__(self, blocked, block_sight = None):
         self.blocked = blocked
+        self.explored = False
         #blocked meaning it can not be passed through
         #by default if a tile is blcoked, it also blocks sight
         if block_sight is None:
