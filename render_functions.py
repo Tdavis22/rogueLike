@@ -1,7 +1,14 @@
 import libtcodpy as libtcod
 
+from enum import Enum
+
+class RenderOrder(Enum):
+    #Higher number means it will spawn on top
+    CORPSE = 1
+    ITEM = 2
+    ACTOR = 3
 #Params: Con = console ref, entites = list of entity, game_map = map ref, colors = libtcod color Dictionary
-def render_all(con, entites, game_map, fov_map, fov_recompute, SCREEN_WIDTH, SCREEN_HEIGHT, colors):
+def render_all(con, entities, player, game_map, fov_map, fov_recompute, SCREEN_WIDTH, SCREEN_HEIGHT, colors):
     if fov_recompute:
         #Draw all entites in the list entites
         for y in range(game_map.height):
@@ -21,11 +28,15 @@ def render_all(con, entites, game_map, fov_map, fov_recompute, SCREEN_WIDTH, SCR
                         libtcod.console_set_char_background(con, x, y, colors.get('dark_wall'), libtcod.BKGND_SET)
                     else:
                         libtcod.console_set_char_background(con, x, y, colors.get('dark_ground'), libtcod.BKGND_SET)
-
+    entities_in_render_order = sorted(entities, key = lambda x: x.render_order.value)
     #Draw all entites
-    for entity in entites:
+    for entity in entities_in_render_order:
         draw_entity(con, entity, fov_map)
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+    libtcod.console_set_default_foreground(con, libtcod.white)
+    libtcod.console_print_ex(con, 1, SCREEN_HEIGHT -2, libtcod.BKGND_NONE, libtcod.LEFT,
+                            'HP : {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))
 
 def clear_all(con, entities):
     for entity in entities:
