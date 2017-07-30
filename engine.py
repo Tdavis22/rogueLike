@@ -35,6 +35,7 @@ def main():
     FOV_RADIUS = 10
 
     max_monsters_per_room = 3
+    max_items_per_room = 2
     """
     if we were to implement custom tiles
     wall_tile = 256
@@ -71,7 +72,8 @@ def main():
     panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
     game_map = GameMap(MAP_WIDTH, MAP_HEIGHT)
-    game_map.make_map(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, MAP_WIDTH, MAP_HEIGHT, player, entities, max_monsters_per_room)
+    game_map.make_map(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, MAP_WIDTH, MAP_HEIGHT, player, entities,
+                     max_monsters_per_room, max_items_per_room)
 
     fov_recompute = True # we only need to recompute every time FOV changes like moving
     fov_map = initialize_fov(game_map)
