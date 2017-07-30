@@ -84,11 +84,11 @@ def main():
     game_state = GameStates.PLAYERS_TURN
     #END INTIALIZATION
     while not libtcod.console_is_window_closed():
-        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
 
         render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, SCREEN_WIDTH, SCREEN_HEIGHT,
-                   BAR_WIDTH, PANEL_HEIGHT, PANEL_Y, colors)
+                   BAR_WIDTH, PANEL_HEIGHT, PANEL_Y, mouse, colors)
         fov_recompute = False #don't need to recopute fov until after drawing new fov
         libtcod.console_flush()
         clear_all(con, entities)
