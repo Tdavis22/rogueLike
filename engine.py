@@ -1,19 +1,30 @@
 import libtcodpy as libtcod
 
-from input_handlers import handle_keys
-from entity import Entity,  get_blocking_entities_at_location
-from render_functions import clear_all, render_all, RenderOrder
-from map_objects.game_map import GameMap
-from fov_functions import initialize_fov, recompute_fov
-from game_states import GameStates
+
 from components.fighter import Fighter
 from death_functions import kill_monster, kill_player
+from entity import Entity,  get_blocking_entities_at_location
+from fov_functions import initialize_fov, recompute_fov
+from map_objects.game_map import GameMap
+from game_messages import MessageLog
+from game_states import GameStates
+from input_handlers import handle_keys
+from render_functions import clear_all, render_all, RenderOrder
 
 def main():
     SCREEN_WIDTH = 80
     SCREEN_HEIGHT = 50
+
+    BAR_WIDTH = 20
+    PANEL_HEIGHT = 7
+    PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
+
+    message_x = BAR_WIDTH + 2
+    message_width = SCREEN_WIDTH - BAR_WIDTH -2
+    message_height = PANEL_HEIGHT - 1
+
     MAP_WIDTH = 80
-    MAP_HEIGHT = 45
+    MAP_HEIGHT = 43
 
     ROOM_MAX_SIZE = 10
     ROOM_MIN_SIZE = 6
@@ -57,12 +68,16 @@ def main():
     #load_customfont();
     libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'python/libtcod tutorial', False) #Init window as not full screen
     con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+    panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
     game_map = GameMap(MAP_WIDTH, MAP_HEIGHT)
     game_map.make_map(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, MAP_WIDTH, MAP_HEIGHT, player, entities, max_monsters_per_room)
 
     fov_recompute = True # we only need to recompute every time FOV changes like moving
     fov_map = initialize_fov(game_map)
+
+    message_log = MessageLog(message_x, message_width, message_height)
+
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
@@ -72,7 +87,8 @@ def main():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS, key, mouse)
 
 
-        render_all(con, entities, player, game_map, fov_map, fov_recompute, SCREEN_WIDTH, SCREEN_HEIGHT, colors)
+        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, SCREEN_WIDTH, SCREEN_HEIGHT,
+                   BAR_WIDTH, PANEL_HEIGHT, PANEL_Y, colors)
         fov_recompute = False #don't need to recopute fov until after drawing new fov
         libtcod.console_flush()
         clear_all(con, entities)
@@ -106,7 +122,8 @@ def main():
             dead_entity = player_turn_result.get('dead')
 
             if message:
-                print(message)
+                message_log.add_message(message)
+
 
             if dead_entity:
                 if dead_entity == player:
@@ -114,7 +131,7 @@ def main():
                 else:
                     message = kill_monster(dead_entity)
 
-                print (message)
+                message_log.add_message(message)
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
@@ -126,7 +143,7 @@ def main():
                         dead_entity = enemy_turn_result.get('dead')
 
                         if message:
-                            print(message)
+                            message_log.add_message(message)
 
                         if dead_entity:
                             if dead_entity == player:
@@ -134,7 +151,7 @@ def main():
                             else:
                                 message = kill_monster(dead_entity)
 
-                            print(message)
+                            message_log.add_message(message)
 
                             if game_state == GameStates.PLAYER_DEAD:
                                 break
