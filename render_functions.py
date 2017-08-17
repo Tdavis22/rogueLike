@@ -2,6 +2,10 @@ import libtcodpy as libtcod
 
 from enum import Enum
 
+from game_states import GameStates
+
+from menu import inventory_menu
+
 class RenderOrder(Enum):
     #Higher number means it will spawn on top
     CORPSE = 1
@@ -35,7 +39,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
 
 #Params: Con = console ref, entites = list of entity, game_map = map ref, colors = libtcod color Dictionary
 def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, SCREEN_WIDTH, SCREEN_HEIGHT, bar_width,
-             panel_height, panel_y, mouse, colors):
+             panel_height, panel_y, mouse, colors, game_state):
     if fov_recompute:
         #Draw all entites in the list entites
         for y in range(game_map.height):
@@ -60,6 +64,14 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     for entity in entities_in_render_order:
         draw_entity(con, entity, fov_map)
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+    if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+        if game_state == GameStates.SHOW_INVENTORY:
+            inventory_title = 'Press the key next to an item to use it, or Esc to cancel.\n'
+        else:
+            inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
+
+        inventory_menu(con, inventory_title, player.inventory, 50, SCREEN_WIDTH, SCREEN_HEIGHT)
 
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)

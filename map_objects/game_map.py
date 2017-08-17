@@ -3,8 +3,11 @@ from map_objects.tile import Tile
 from map_objects.rectangle import Rect
 from random import randint
 from entity import Entity
+from game_messages import Message
+from item_functions import cast_confuse, cast_firebolt, cast_lightning, heal
 from components.ai import BasicMonster
 from components.fighter import Fighter
+from components.item import Item
 from render_functions import RenderOrder
 
 class GameMap:
@@ -110,7 +113,27 @@ class GameMap:
             y = randint(room.y1 + 1, room.y2 -1)
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order = RenderOrder.ITEM)
+                item_chance = randint(0, 100)
+
+                if item_chance < 30: #healing Potion
+                    item_component = Item(use_function = heal, amount = 4)
+                    item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order = RenderOrder.ITEM,
+                                  item = item_component)
+                elif item_chance < 35:#FireBolt
+                    item_component = Item(use_function = cast_firebolt, targeting = True, targeting_message = Message(
+                        'Left-click a target tile for the firebolt. Esc or right-click to cancel.', libtcod.light_cyan),
+                                          damage = 12, radius = 3)
+                    item = Entity(x, y, '#', libtcod.red, 'FireBolt Scroll', render_order = RenderOrder.ITEM,
+                                 item = item_component)
+                elif item_chance < 90:
+                    item_component = Item(use_function = cast_confuse, targeting = True, targeting_message = Message(
+                        'Left_click an enemy to confuse it. Esc or right-click to cancel.', libtcod.light_cyan))
+                    item = Entity(x, y, '#', libtcod.light_pink, 'Confusiong Scroll', render_order = RenderOrder.ITEM,
+                                  item = item_component)
+                else: #lightning Bolt
+                    item_component = Item(use_function = cast_lightning, damage = 20, maximum_range = 5)
+                    item = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll', render_order = RenderOrder.ITEM,
+                                  item = item_component)
 
                 entities.append(item)
 

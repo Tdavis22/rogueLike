@@ -7,7 +7,8 @@ class Entity:
     A generic object to represent players, enemies, items, etc.
     Possible component:Fighter/AI
     """
-    def __init__(self, x, y, char, color, name, blocks = False, render_order = RenderOrder.CORPSE, fighter = None, ai = None):
+    def __init__(self, x, y, char, color, name, blocks = False, render_order = RenderOrder.CORPSE, fighter = None, ai = None,
+                 item = None, inventory = None):
         self.x = x
         self.y = y
         self.char = char
@@ -17,6 +18,8 @@ class Entity:
         self.render_order = render_order
         self.fighter = fighter
         self.ai = ai
+        self.item = item
+        self.inventory = inventory
 
         #We want to be able to reference the owner from inside the component
         if self.fighter:
@@ -24,6 +27,12 @@ class Entity:
 
         if self.ai:
             self.ai.owner = self
+
+        if self.item:
+            self.item.owner = self
+
+        if self.inventory:
+            self.inventory.owner = self
 
     def move(self, dx, dy):
         #move by the given amount
@@ -42,6 +51,8 @@ class Entity:
                     get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
                     self.move(dx, dy)
 
+    def distance(self, x, y):
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
     def distance_to(self, other):
         dx = other.x - self.x
         dy = other.y - self.y

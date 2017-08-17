@@ -2,64 +2,28 @@ import libtcodpy as libtcod
 
 
 from components.fighter import Fighter
+from components.inventory import Inventory
 from death_functions import kill_monster, kill_player
 from entity import Entity,  get_blocking_entities_at_location
 from fov_functions import initialize_fov, recompute_fov
 from map_objects.game_map import GameMap
-from game_messages import MessageLog
+from game_messages import Message, MessageLog
 from game_states import GameStates
-from input_handlers import handle_keys
+from input_handlers import handle_keys, handle_mouse
+from loader_functions.initialize_new_game import get_constants
 from render_functions import clear_all, render_all, RenderOrder
 
+
 def main():
-    SCREEN_WIDTH = 80
-    SCREEN_HEIGHT = 50
-
-    BAR_WIDTH = 20
-    PANEL_HEIGHT = 7
-    PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
-
-    message_x = BAR_WIDTH + 2
-    message_width = SCREEN_WIDTH - BAR_WIDTH -2
-    message_height = PANEL_HEIGHT - 1
-
-    MAP_WIDTH = 80
-    MAP_HEIGHT = 43
-
-    ROOM_MAX_SIZE = 10
-    ROOM_MIN_SIZE = 6
-    MAX_ROOMS = 30
-
-    FOV_ALGORITHM = 0 #default libtcod FOV alg
-    FOV_LIGHT_WALLS = True
-    FOV_RADIUS = 10
-
-    max_monsters_per_room = 3
-    max_items_per_room = 2
-    """
-    if we were to implement custom tiles
-    wall_tile = 256
-    floor_tile = 257
-    player_tile = 258
-    orc_tile = 259
-    troll_tile = 260
-    scroll_tile = 261
-    healingpotion_tile = 262
-    sword_tile = 263
-    shield_tile = 264
-    stairsdown_tile = 265
-    dagger_tile = 266
-    """
-    #BEGIN INITAILIZATION
-    colors = {
-        'dark_wall': libtcod.Color(0,0,100),
-        'dark_ground': libtcod.Color(50, 50, 150),
-        'light_wall' : libtcod.Color(130, 110, 50),
-        'light_ground' : libtcod.Color(200, 180, 50)
-    }
-
+    constants = get_constants()
+    for key, value in constants.items() :
+        print (key, value)
+    print(constants['screen_height'])
+    print(constants['screen_width'])
     fighter_component = Fighter(hp = 30, defense = 2, power = 5)
-    player = Entity(0, 0, '@', libtcod.white, "Player", blocks = True, render_order = RenderOrder.ACTOR, fighter = fighter_component)
+    inventory_component = Inventory(26)
+    player = Entity(0, 0, '@', libtcod.white, "Player", blocks = True, render_order = RenderOrder.ACTOR,
+                   fighter = fighter_component, inventory = inventory_component)
     entities = [player]
 
     libtcod.console_set_custom_font('arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
@@ -67,39 +31,54 @@ def main():
 
     #libtcod.console_set_custom_font("TiledFont.png", libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD, 32, 10)
     #load_customfont();
-    libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'python/libtcod tutorial', False) #Init window as not full screen
-    con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
-    panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
+    libtcod.console_init_root(constants['screen_width'], constants['screen_height'], constants['window_title'], False) #Init window as not full screen
+    con = libtcod.console_new(constants['screen_width'], constants['screen_height'])
+    panel = libtcod.console_new(constants['screen_width'], constants['panel_height'])
 
-    game_map = GameMap(MAP_WIDTH, MAP_HEIGHT)
-    game_map.make_map(MAX_ROOMS, ROOM_MIN_SIZE, ROOM_MAX_SIZE, MAP_WIDTH, MAP_HEIGHT, player, entities,
-                     max_monsters_per_room, max_items_per_room)
+    game_map = GameMap(constants['map_width'], constants['map_height'])
+    game_map.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                     constants['map_width'], constants['map_height'], player, entities,
+                     constants['max_monsters_per_room'], constants['max_items_per_room'])
 
     fov_recompute = True # we only need to recompute every time FOV changes like moving
     fov_map = initialize_fov(game_map)
 
-    message_log = MessageLog(message_x, message_width, message_height)
+    message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
 
     key = libtcod.Key()
     mouse = libtcod.Mouse()
 
     game_state = GameStates.PLAYERS_TURN
+    previous_game_state = game_state #used for traversing menus while retaining where the game is
+
+    targeting_item = None
     #END INTIALIZATION
     while not libtcod.console_is_window_closed():
         libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
 
 
-        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, SCREEN_WIDTH, SCREEN_HEIGHT,
-                   BAR_WIDTH, PANEL_HEIGHT, PANEL_Y, mouse, colors)
+        render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log,
+                   constants['screen_width'], constants['screen_height'], constants['bar_width'],
+                   constants['panel_height'], constants['panel_y'], mouse, constants['colors'], game_state)
         fov_recompute = False #don't need to recopute fov until after drawing new fov
         libtcod.console_flush()
         clear_all(con, entities)
 
         #Checking input
-        action = handle_keys(key) #action is a Dictionary
+        action = handle_keys(key, game_state) #action is a Dictionary
+        mouse_action = handle_mouse(mouse)
+
         move = action.get('move')
+        pickup = action.get('pickup')
+        show_inventory = action.get('show_inventory')
+        drop_inventory = action.get('drop_inventory')
+        inventory_index = action.get('inventory_index')
         exit = action.get('exit')
         isFullscreen = action.get('fullscreen')
+
+        left_click = mouse_action.get('left_click')
+        right_click = mouse_action.get('right_click')
+
 
         player_turn_results = []
         if move and game_state == GameStates.PLAYERS_TURN:
@@ -116,15 +95,77 @@ def main():
                     fov_recompute = True
 
                 game_state = GameStates.ENEMY_TURN
+
+        elif pickup and game_state == GameStates.PLAYERS_TURN:
+            for entity in entities:
+                if entity.item and entity.x == player.x and entity.y == player.y:
+                    pickup_results = player.inventory.add_item(entity)
+                    player_turn_results.extend(pickup_results)
+
+                    break
+
+            else:
+                message_log.add_message(Message('there is nothing here to pick up.', libtcod.yellow))
         if isFullscreen:
             libtcod.console_set_fullscreen(not libtcod.console_is_fullscreen())
+        if fov_recompute:
+            recompute_fov(fov_map, player.x, player.y, constants['fov_radius'], constants['fov_light_walls'],
+                          constants['fov_algorithm'])
+
+        if show_inventory:
+            previous_game_state = game_state
+            game_state = GameStates.SHOW_INVENTORY
+
+
+
+        if drop_inventory:
+            print(drop_inventory)
+            previous_game_state = game_state
+            game_state = GameStates.DROP_INVENTORY
+
+        if inventory_index is not None and previous_game_state != GameStates.PLAYER_DEAD and inventory_index < len(
+        player.inventory.items):
+           item = player.inventory.items[inventory_index]
+           if game_state == GameStates.SHOW_INVENTORY:
+               player_turn_results.extend(player.inventory.use(item, entities = entities, fov_map = fov_map))
+           elif game_state == GameStates.DROP_INVENTORY:
+               player_turn_results.extend(player.inventory.drop_item(item))
+
+
+        if game_state == GameStates.TARGETING:
+            if left_click:
+                target_x, target_y = left_click
+
+                item_use_results = player.inventory.use(targeting_item, entities = entities, fov_map = fov_map, target_x = target_x, target_y = target_y)
+                player_turn_results.extend(item_use_results)
+            elif right_click:
+                player_turn_results.append({'targeting_cancelled': True})
+        if exit:
+            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
+                game_state = previous_game_state
+            elif game_state == GameStates.TARGETING:
+                player_turn_results.append({'targeting_cancelled': True})
+            else:
+                return True
+
+
 
         for player_turn_result in player_turn_results:
             message = player_turn_result.get('message')
             dead_entity = player_turn_result.get('dead')
+            item_added = player_turn_result.get('item_added')
+            item_consumed = player_turn_result.get('consumed')
+            item_dropped = player_turn_result.get('item_dropped')
+            targeting = player_turn_result.get('targeting')
+            targeting_cancelled = player_turn_result.get('targeting_cancelled')
 
             if message:
                 message_log.add_message(message)
+
+            if targeting_cancelled:
+                game_state = previous_game_state
+
+                message_log.add_message(Message('Targeting cancelled'))
 
 
             if dead_entity:
@@ -134,6 +175,27 @@ def main():
                     message = kill_monster(dead_entity)
 
                 message_log.add_message(message)
+
+            if item_consumed:
+                game_state = GameStates.ENEMY_TURN
+
+            if item_dropped:
+                entities.append(item_dropped)
+
+                game_state = GameStates.ENEMY_TURN
+
+            if item_added:
+                entities.remove(item_added)
+
+                game_state = GameStates.ENEMY_TURN #this is here instead of action so player can't waste turn picking up something non existant
+
+            if targeting:
+                previous_game_state = GameStates.PLAYERS_TURN
+                game_state = GameStates.TARGETING
+
+                targeting_item = targeting
+
+                message_log.add_message(targeting_item.item.targeting_message)
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
@@ -165,10 +227,7 @@ def main():
             else:
                 game_state = GameStates.PLAYERS_TURN
 
-        if fov_recompute:
-            recompute_fov(fov_map, player.x, player.y, FOV_RADIUS, FOV_LIGHT_WALLS, FOV_ALGORITHM)
-        if exit:
-            return True
+
 
 """
 def load_customfont():
