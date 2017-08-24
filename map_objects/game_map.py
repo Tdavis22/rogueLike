@@ -5,7 +5,7 @@ from random import randint
 from entity import Entity
 from game_messages import Message
 from item_functions import cast_confuse, cast_firebolt, cast_lightning, heal
-from components.ai import BasicMonster
+from components.ai import BasicMonster, CowardMonster
 from components.fighter import Fighter
 from components.item import Item
 from render_functions import RenderOrder
@@ -97,7 +97,14 @@ class GameMap:
             y = randint(room.y1 + 1, room.y2 -1)
 
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
-                if randint(0, 100) < 80:
+                monster_chance = randint(0, 100)
+
+                if monster_chance < 70:
+                    fighter_component = Fighter(hp = 2, defense = 0, power = 1)
+                    ai_component = CowardMonster()
+                    monster = Entity(x, y, 'f', libtcod.purple, "Fairy", blocks = True,
+                                    render_order = RenderOrder.ACTOR, fighter = fighter_component, ai = ai_component)
+                elif monster_chance < 80:
                     fighter_component = Fighter(hp = 10, defense = 0, power = 3)
                     ai_component = BasicMonster()
                     monster = Entity(x, y, 'o', libtcod.desaturated_green, "Orc", blocks = True,

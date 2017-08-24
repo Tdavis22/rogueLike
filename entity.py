@@ -44,12 +44,13 @@ class Entity:
         dy = target_y - self.y
         distance = math.sqrt(dx ** 2 + dy ** 2)
 
-        dx = int(round(dx / distance))
-        dy = int(round(dy / distance))
+        if(distance != 0):
+            dx = int(round(dx / distance))
+            dy = int(round(dy / distance))
 
-        if not (game_map.is_blocked(self.x + dx, self.y + dy ) or
-                    get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
-                    self.move(dx, dy)
+            if not (game_map.is_blocked(self.x + dx, self.y + dy ) or
+                        get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)):
+                        self.move(dx, dy)
 
     def distance(self, x, y):
         return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
@@ -58,7 +59,10 @@ class Entity:
         dy = other.y - self.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
-    def move_astar(self, target, entities, game_map):
+    def move_astar(self, entities, game_map, target = None, target_x = -1, target_y = -1):
+        if target != None:
+            target_x = target.x
+            target_y = target.y
         #create a fov map that has the dimensions of the map
         fov = libtcod.map_new(game_map.width, game_map.height)
 
@@ -81,6 +85,7 @@ class Entity:
         #The 1.41 is the normal diagonal cost of moving, it can be set as 0.0 if diagonal move are proibited
         my_path = libtcod.path_new_using_map(fov, 1.41)
 
+        libtcod.path_compute(my_path, self.x, self.y, target_x, target_y)
         #Check if the path exists, and in this case, also the path is shorter than 25 tiles
         #The path size matters if you want the monster to use alternative longer paths (for example through other rooms) if for example the player is in a corridor
         #keeping the path size low keeps the monster from running a long alternative route
@@ -95,10 +100,13 @@ class Entity:
         else:
             #Keep the old move function as a backup so that if there are no paths
             #It will still try to move towards the player
-            self.move_towards(target.x, target.y, game_map, entities)
+            self.move_towards(target_x, target_y, game_map, entities)
 
         #We recreate the path every
         libtcod.path_delete(my_path)
+
+
+
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y):
     for entity in entities:
