@@ -1,16 +1,18 @@
 import libtcodpy as libtcod
 
-from enum import Enum
+from enum import Enum, auto
 
 from game_states import GameStates
 
 from menu import inventory_menu
 
 class RenderOrder(Enum):
-    #Higher number means it will spawn on top
-    CORPSE = 1
-    ITEM = 2
-    ACTOR = 3
+    #Higher number(lower on list) means it will spawn on top
+    CORPSE = auto()
+    ITEM = auto()
+    STAIRS = auto()
+    ACTOR = auto()
+
 
 def get_names_under_mouse(mouse, entities, fov_map):
     (x, y) = (mouse.cx, mouse.cy)
