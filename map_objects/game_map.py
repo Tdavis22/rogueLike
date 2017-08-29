@@ -101,6 +101,22 @@ class GameMap:
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
 
+    def next_floor(self, player, message_log, constants):
+        self.dungeon_level += 1
+        entities = [player]
+
+        self.tiles = self.initialize_tiles()
+        self.make_map(constants['max_rooms'], constants['room_min_size'], constants['room_max_size'],
+                      constants['map_width'], constants['map_height'], player, entities,
+                      constants['max_monsters_per_room'], constants['max_items_per_room'])
+
+        player.fighter.heal(player.fighter.max_hp // 2) #floor division. Truncates
+
+        message_log.add_message(Message("""You take a moment to rest, and recover your strength
+                                            as you advance to the next floor """, libtcod.light_violet))
+
+        return entities
+
     def place_entities(self, room, entities, max_monsters_per_room, max_items_per_room):
         #Get a random number of max_monsters_per_room
         number_of_monsters = randint(0, max_monsters_per_room)
