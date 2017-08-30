@@ -4,7 +4,7 @@ from enum import Enum, auto
 
 from game_states import GameStates
 
-from menu import inventory_menu
+from menu import inventory_menu, level_up_menu
 
 class RenderOrder(Enum):
     #Higher number(lower on list) means it will spawn on top
@@ -74,7 +74,8 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
             inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
 
         inventory_menu(con, inventory_title, player.inventory, 50, SCREEN_WIDTH, SCREEN_HEIGHT)
-
+    elif game_state == GameStates.LEVEL_UP:
+        level_up_menu(con, 'Level up! Choose a state to raise:', player, 40, screen_width, screen_height)
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 

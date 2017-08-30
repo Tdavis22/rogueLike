@@ -132,17 +132,17 @@ class GameMap:
                 monster_chance = randint(0, 100)
 
                 if monster_chance < 70:
-                    fighter_component = Fighter(hp = 2, defense = 0, power = 1)
+                    fighter_component = Fighter(hp = 2, defense = 0, power = 1, xp = 50)
                     ai_component = CowardMonster()
                     monster = Entity(x, y, 'f', libtcod.purple, "Fairy", blocks = True,
                                     render_order = RenderOrder.ACTOR, fighter = fighter_component, ai = ai_component)
                 elif monster_chance < 80:
-                    fighter_component = Fighter(hp = 10, defense = 0, power = 3)
+                    fighter_component = Fighter(hp = 10, defense = 0, power = 3, xp = 35)
                     ai_component = BasicMonster()
                     monster = Entity(x, y, 'o', libtcod.desaturated_green, "Orc", blocks = True,
                                     render_order = RenderOrder.ACTOR, fighter = fighter_component, ai = ai_component)
                 else:
-                    fighter_component = Fighter(hp = 16, defense = 1, power = 4)
+                    fighter_component = Fighter(hp = 16, defense = 1, power = 4, xp = 100)
                     ai_component = BasicMonster()
                     monster = Entity(x, y, 'T', libtcod.darker_green, "Troll", blocks = True,
                                     render_order = RenderOrder.ACTOR, fighter = fighter_component, ai = ai_component)

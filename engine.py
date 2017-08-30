@@ -118,6 +118,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
         drop_inventory = action.get('drop_inventory')
         inventory_index = action.get('inventory_index')
         take_stairs = action.get('take_stairs')
+        level_up = action.get('level_up')
         exit = action.get('exit')
         isFullscreen = action.get('fullscreen')
 
@@ -184,6 +185,17 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
             else:
                 message_log.add_message(Message('There are no stairs here.', libtcod.yellow))
 
+        if level_up:
+            if level_up == 'hp':
+                player.fighter.max_hp += 20
+                player.fighter.hp += 20
+            elif level_up == 'sdtr':
+                player.fighter.power += 1
+            elif level_up == 'def':
+                player.fighter.defense += 1
+
+            game_state = previous_game_state
+            
         if game_state == GameStates.TARGETING:
             if left_click:
                 target_x, target_y = left_click
@@ -191,7 +203,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 item_use_results = player.inventory.use(targeting_item, entities = entities, fov_map = fov_map, target_x = target_x, target_y = target_y)
                 player_turn_results.extend(item_use_results)
             elif right_click:
-                player_turn_results.append({'targeting_cancelled': True})
+                player_turn_results.append({'elled': True})
 
         if exit:
             if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
@@ -203,7 +215,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 return True
 
 
-
+        #player turn result is a dictionary that contains many values that are returned from entity components
         for player_turn_result in player_turn_results:
             message = player_turn_result.get('message')
             dead_entity = player_turn_result.get('dead')
@@ -212,6 +224,7 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
             item_dropped = player_turn_result.get('item_dropped')
             targeting = player_turn_result.get('targeting')
             targeting_cancelled = player_turn_result.get('targeting_cancelled')
+            xp = player_turn_result.get('xp')
 
             if message:
                 message_log.add_message(message)
@@ -220,7 +233,6 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 game_state = previous_game_state
 
                 message_log.add_message(Message('Targeting cancelled'))
-
 
             if dead_entity:
                 if dead_entity == player:
@@ -250,6 +262,17 @@ def play_game(player, entities, game_map, message_log, game_state, con, panel, c
                 targeting_item = targeting
 
                 message_log.add_message(targeting_item.item.targeting_message)
+
+            if xp:
+                leveled_up = player.level.add_xp(xp)
+                message_log.add_message(Message('You gain {0} experience points.'.format(xp)))
+
+                if leveled_up:
+                    message_log.add_message(Message(
+                        'You have advanced a level. You are level {0}!'.format(
+                           player.level.current_level), libtcod.yellow))
+                    previous_game_state = game_state
+                    game_state = GameStates.LEVEL_UP
 
         if game_state == GameStates.ENEMY_TURN:
             for entity in entities:
