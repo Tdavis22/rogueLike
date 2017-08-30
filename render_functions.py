@@ -4,7 +4,7 @@ from enum import Enum, auto
 
 from game_states import GameStates
 
-from menu import inventory_menu, level_up_menu
+from menu import character_screen, inventory_menu, level_up_menu
 
 class RenderOrder(Enum):
     #Higher number(lower on list) means it will spawn on top
@@ -40,7 +40,7 @@ def render_bar(panel, x, y, total_width, name, value, maximum, bar_color, back_c
                             '{0}: {1}/{2}'.format(name, value, maximum))
 
 #Params: Con = console ref, entites = list of entity, game_map = map ref, colors = libtcod color Dictionary
-def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, SCREEN_WIDTH, SCREEN_HEIGHT, bar_width,
+def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, message_log, screen_width, screen_height, bar_width,
              panel_height, panel_y, mouse, colors, game_state):
     if fov_recompute:
         #Draw all entites in the list entites
@@ -65,7 +65,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     #Draw all entites
     for entity in entities_in_render_order:
         draw_entity(con, entity, fov_map, game_map)
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+    libtcod.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
 
     if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY):
         if game_state == GameStates.SHOW_INVENTORY:
@@ -73,9 +73,14 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
         else:
             inventory_title = 'Press the key next to an item to drop it, or Esc to cancel.\n'
 
-        inventory_menu(con, inventory_title, player.inventory, 50, SCREEN_WIDTH, SCREEN_HEIGHT)
+        inventory_menu(con, inventory_title, player.inventory, 50, screen_width, screen_height)
+
     elif game_state == GameStates.LEVEL_UP:
         level_up_menu(con, 'Level up! Choose a state to raise:', player, 40, screen_width, screen_height)
+
+    elif game_state == GameStates.CHARACTER_SCREEN:
+        character_screen(player, 30, 10, screen_width, screen_height)
+
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 
@@ -96,7 +101,7 @@ def render_all(con, panel, entities, player, game_map, fov_map, fov_recompute, m
     libtcod.console_set_default_foreground(panel, libtcod.light_gray)
     libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT,
                             get_names_under_mouse(mouse, entities, fov_map)) #prints the name of a square in bottome left corner
-    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, panel_height, 0, 0, panel_y)
+    libtcod.console_blit(panel, 0, 0, screen_width, panel_height, 0, 0, panel_y)
 
 def clear_all(con, entities):
     for entity in entities:

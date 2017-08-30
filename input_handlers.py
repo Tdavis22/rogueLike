@@ -15,6 +15,8 @@ def handle_keys(key, game_state):
         return handle_inventory_keys(key)
     elif game_state == GameStates.LEVEL_UP:
         return handle_level_up_menu(key)
+    elif game_state == GameStates.CHARACTER_SCREEN:
+        return handle_character_screen(key)
 
     return {}
 
@@ -47,6 +49,8 @@ def handle_player_turn_keys(key):
         return {'drop_inventory': True}
     elif key_char == '.':
         return{'take_stairs': True}
+    elif key_char == 'c':
+        return{'show_character_screen': True}
 
     if key.vk == libtcod.KEY_ENTER and key.lalt:
         # ALT+Enter: toggle full screen
@@ -117,6 +121,12 @@ def handle_level_up_menu(key):
             return {'level_up': 'str'}
         elif key_char == 'c':
             return{'level_up': 'def'}
+
+    return {}
+
+def handle_character_screen(key):
+    if key.vk == libtcod.KEY_ESCAPE:
+        return {'exit': True}
 
     return {}
 
